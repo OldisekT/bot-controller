@@ -1,0 +1,209 @@
+/* MADE BY OLDISEK with E */
+
+:root {
+  --bg: #25262c;
+  --fg: #1e2025;
+
+  --hl: #eaa021;
+  --hl-m: #9d6c17;
+  --val: #3caf12;
+  --inval: #af1238;
+
+  --link: #30e6d6;
+  --link-m: #1aa99d;
+
+  --btn: #41434f;
+  --embed: #101113;
+
+  --text: #fffaea;
+  --text-m: #bfbbae;
+}
+
+body {
+  font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+}
+
+a {
+  color: var(--link);
+}
+
+a:hover {
+  color: var(--link-m);
+}
+
+.title-bar {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  overflow: hidden;
+  z-index: 300;
+}
+.title-bar p {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 0.7rem;
+  color: var(--text-m);
+  z-index: 999;
+  margin: 0.2rem;
+  user-select: none;
+}
+
+.title-handle {
+  -webkit-app-region: drag;
+  width: calc(100% - 60px);
+  height: 100%;
+  cursor: grab;
+  margin: 0 !important;
+}
+
+.title-handle:active {
+  cursor: grabbing;
+}
+
+.title-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+
+  width: 60px;
+  height: 100%;
+
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.title-button {
+  width: 13px;
+  height: 13px;
+
+  cursor: pointer;
+
+  color: var(--text);
+
+  border: none;
+  box-sizing: border-box;
+  border-radius: 50%;
+  z-index: 9999;
+}
+.title-button:hover {
+  scale: 1.08;
+}
+
+.quit-button {
+  background-color: red;
+}
+.max-button {
+  background-color: var(--hl);
+}
+.min-button {
+  background-color: lime;
+}
+
+@font-face {
+  font-family: "ABC Ginto Nord";
+  src: url("../discord_headline.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 800;
+}
+
+.discord-headline {
+  font-family: "ABC Ginto Nord", sans-serif;
+  font-weight: 800;
+}
+
+.normal-button {
+  background-color: var(--btn);
+  padding: 1rem;
+  border: none;
+  border-radius: 10px;
+  font-size: larger;
+  color: var(--text);
+  transition: padding 0s, all .7s;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.normal-button:focus,
+.normal-button:active,
+.normal-button:hover {
+  transition: all 100ms;
+  background-color: var(--hl-m);
+}
+
+.normal-input {
+  width: 100%;
+
+  font-size: larger;
+  cursor: text;
+
+  transition: all .7s;
+
+  background-color: var(--btn);
+  color: var(--text);
+  
+  padding: 1rem;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: none;
+  outline: 0px solid var(--hl);
+}
+.normal-input:focus,
+.normal-input:active,
+.normal-input:hover {
+  transition: all 100ms;
+  background-color: var(--hl-m);
+}
+
+.normal-input::placeholder  {
+  color: var(--text-m);
+}
+
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.loading-part {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin: 0 5px;
+  border-radius: 50%;
+  animation: loading 1.2s ease-in-out infinite;
+  background-color: var(--text-m);
+}
+
+.loading-part:nth-child(1) {
+  animation-delay: -0.4s;
+}
+
+.loading-part:nth-child(2) {
+  animation-delay: -0.2s;
+}
+
+.loading-part:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes loading {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}

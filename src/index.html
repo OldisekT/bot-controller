@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bot controller</title>
+    <link rel="shortcut icon" href="./assets/favicon.png" type="image/x-icon" />
+    <link rel="stylesheet" href="./assets/css/main.css" />
+    <link rel="stylesheet" href="./assets/css/index.css" />
+  </head>
+  <body id="index">
+    <!---->
+    <main>
+      <div class="lobby">
+        <h1 class="discord-headline">Bot Controller</h1>
+        <p>Please specify the desired method and location for connection:</p>
+        <div class="form-where" id="theForm">
+          <button class="normal-button" id="discordBot">
+            <span>Discord bot</span>
+            <input
+              type="text"
+              class="invisible normal-input"
+              id="dis_token_input"
+              placeholder="Paste your Discord bot Token here..."
+            />
+          </button>
+          <button class="normal-button" id="discordSession">
+            <span>Discord account</span>
+            <input
+              type="text"
+              class="invisible normal-input"
+              id="dis_session_input"
+              placeholder="Paste your Discord session Token here..."
+            />
+          </button>
+          <button class="normal-button" id="revoltToken">
+            <span>Revolt bot</span>
+            <input
+              type="text"
+              style="background-color: var(--inval)"
+              class="invisible normal-input"
+              id="revolt_token_input"
+              title="WIP, not working"
+              placeholder="Paste your revolt Token here..."
+            />
+          </button>
+        </div>
+        <button
+          id="moveOn"
+          onmousedown="submit()"
+          class="normal-button"
+          style="
+            padding: 8px;
+            transform: scale(0);
+            transform-origin: 50%;
+            transition-duration: 150ms;
+          "
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="currentColor"
+              d="M4 10v4h9l-3.5 3.5l2.42 2.42L19.84 12l-7.92-7.92L9.5 6.5L13 10H4Z"
+            />
+          </svg>
+        </button>
+        <div
+          class="loading invisible"
+          style="margin-top: 30px; opacity: 0"
+          id="loading"
+        >
+          <div class="loading-part"></div>
+          <div class="loading-part"></div>
+          <div class="loading-part"></div>
+        </div>
+        <p id="token" class="invisible"></p>
+        <p id="isTokenValid" class="invisible"></p>
+        <script>
+          var inMenu = "none";
+          var option = 0;
+          let submitButton = document.getElementById("moveOn");
+          let isTokenValid = false;
+
+          document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              if (inMenu === "writeToken") {
+                BackToConnection();
+              }
+            }
+          });
+
+          var theForm = document.getElementById("theForm");
+          theForm.childNodes.forEach((child) => {
+            if (child.nodeType === Node.ELEMENT_NODE) {
+              child
+                .querySelector("input")
+                .addEventListener("focusout", (event) => {
+                  if (event.relatedTarget !== submitButton) {
+                    BackToConnection();
+                  }
+                });
+              child.addEventListener("click", () => setupButton(child));
+            }
+          });
+
+          function setupButton(button) {
+            option = Array.from(theForm.children).indexOf(button);
+            inMenu = "writeToken";
+            button.style.padding = 0;
+            button.querySelector("span").style.display = "none";
+            button.querySelector("input").classList.remove("invisible");
+            button.querySelector("input").focus();
+            button.style.transition = "all 500ms";
+            button.style.width = "100%";
+            submitButton.style.transform = "scale(1)";
+            theForm.querySelectorAll("button").forEach((b) => {
+              if (b != button) {
+                b.style.padding = 0;
+                b.style.transition = "all 500ms";
+                b.style.width = 0;
+                b.style.transform = "scaleX(0)";
+                b.parentNode.style.gap = 0;
+              }
+            });
+          }
+          function BackToConnection() {
+            theForm.querySelectorAll("button").forEach((b) => {
+              b.querySelector("span").style.display = "initial";
+              b.querySelector("input").classList.add("invisible");
+              b.style.padding = "20px";
+              b.style.width = "30%";
+              b.style.transform = "";
+              b.parentNode.style.gap = "20px";
+              b.style.transition = "padding 0s, all .7s";
+            });
+            submitButton.style.transform = "scale(0)";
+          }
+          let loadingEl = document.getElementById("loading");
+
+          function submit() {
+            let buttons = Array.from(theForm.children).filter(
+              (child) => child.tagName === "BUTTON"
+            );
+            let selected_element = buttons[option];
+            if (selected_element.querySelector("input").value != "") {
+              document.getElementById("token").innerHTML = selected_element.querySelector("input").value + option;
+              loadingEl.style.opacity = 1;
+              loadingEl.classList.remove("invisible");
+              submitButton.style.transform = "scale(0)";
+            } else {
+              selected_element.querySelector("input").style.outline =
+                "2px solid red";
+              setTimeout(() => {
+                selected_element.querySelector("input").style.outline = "none";
+              }, 1000);
+            }
+          }
+
+          setInterval(() => {
+            if (document.getElementById("token").innerHTML !== "") {
+              let isTokenValidEl = document.getElementById("isTokenValid");
+              let buttons = Array.from(theForm.children).filter(
+                (child) => child.tagName === "BUTTON"
+              );
+
+              let selected_input = buttons[option];
+              if (isTokenValidEl.innerHTML === "true") {
+                loadingEl.style.opacity = 0;
+                loadingEl.classList.add("invisible");
+                isTokenValid = true;
+                selected_input.style.outline = "2px solid var(--val)";
+                setTimeout(() => {
+                  selected_input.style.outline = "none";
+                }, 1000);
+              } else if (isTokenValidEl.innerHTML === "false") {
+                loadingEl.style.opacity = 0;
+                loadingEl.classList.add("invisible");
+                isTokenValid = false;
+                submitButton.style.transform = "scale(1)";
+                selected_input.style.outline = "2px solid var(--inval)";
+                setTimeout(() => {
+                  selected_input.style.outline = "none";
+                }, 1000);
+              }
+              isTokenValidEl.innerHTML = "";
+            }
+          }, 10);
+        </script>
+      </div>
+    </main>
+  </body>
+</html>

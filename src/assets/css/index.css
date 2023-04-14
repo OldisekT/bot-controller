@@ -1,0 +1,62 @@
+/*   MADE BY OLDISEK with E    */
+/* this is for index.html only */
+
+h1 {
+  text-align: center;
+  font-size: clamp(1.2rem,5vw,4.3rem);
+  color: var(--hl);
+  margin: 0;
+  user-select: none;
+}
+
+main {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+
+  height: 100vh;
+  width: 100%;
+}
+.lobby {
+  position: relative;
+
+  width: 70vw;
+
+  text-align: center;
+}
+.lobby p {
+  color: var(--text-m);
+}
+.form-where {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+@media screen and (max-width: 600px) {
+  .form-where {
+    flex-wrap: wrap;
+  }
+}
+
+.form-where button {
+  width: 30%;
+}
+
+.invisible {
+  display: none !important;
+}
+
+#moveOn {
+  position: absolute;
+  left: 20px;
+  bottom: -60px;
+
+  width: 40px;
+  max-width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+  border: none;
+}
