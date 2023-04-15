@@ -1,6 +1,10 @@
 # Bot Controller
 
+![img](https://imgur.com/ExZN0MP.png)
+
 Bot Controller is a custom Discord client built with Electron.js that enables users to log in using Discord tokens, bot tokens, or Revolt bot tokens and read/write messages.
+
+## [SHOWCASE](showcase.md)
 
 > **KEEP IN MIND THAT THIS APPLICATION VIOLATES DISCORD [TOS](https://discord.com/terms)**
 
