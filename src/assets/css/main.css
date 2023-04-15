@@ -34,6 +34,39 @@ a:hover {
   color: var(--link-m);
 }
 
+pre {
+  background-color: #1e1e1e;
+  color: #f8f8f2;
+  font-family: "Fira Code", monospace;
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+pre code {
+  color: #f8f8f2;
+}
+
+pre code[class*="language-"] {
+  background-color: #1e1e1e;
+  color: #f8f8f2;
+}
+
+pre code[class*="language-"]::before {
+  content: attr(class);
+  color: #f8f8f2;
+  font-size: 12px;
+  font-weight: bold;
+  padding-right: 10px;
+}
+
+pre code[class*="language-"]::selection {
+  background-color: rgba(248, 248, 242, 0.3);
+}
+
+
 .title-bar {
   display: block;
   position: absolute;

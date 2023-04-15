@@ -12,23 +12,53 @@
     <p id="command" style="display: none"></p>
     <p id="responseServers" style="display: none"></p>
     <p id="responseChannels" style="display: none"></p>
+    <p id="responseChannel" style="display: none"></p>
     <p id="responseMessages" style="display: none"></p>
     <p id="responseMessage" style="display: none"></p>
+    <p id="responseUser" style="display: none"></p>
     <p id="response" style="display: none"></p>
     <script>
-      const responseServerEl = document.getElementById("responseServers");
-      const responseChannelsEl = document.getElementById("responseChannels");
-      const responseMessagesEl = document.getElementById("responseMessages");
-      const responseMessageEl = document.getElementById("responseMessage");
+      const responseServerEl = document.getElementById("responseServers"); // if you know how to parse data from main.js to here fix it :d
+      const responseChannelsEl = document.getElementById("responseChannels"); // if you know how to parse data from main.js to here fix it :d
+      const responseChannelEl = document.getElementById("responseChannel"); // if you know how to parse data from main.js to here fix it :d
+      const responseMessagesEl = document.getElementById("responseMessages"); // if you know how to parse data from main.js to here fix it :d
+      const responseMessageEl = document.getElementById("responseMessage"); // if you know how to parse data from main.js to here fix it :d
+      const responseUserEl = document.getElementById("responseUser"); // if you know how to parse data from main.js to here fix it :d
       var currentChannel = null;
       var isInDms = null;
       var lastResponse = [];
       var lastMessages = null;
+      var UserInfo = null;
+      let lastNotLoaded = false;
 
       setInterval(() => {
+        if (responseUserEl.innerHTML != "") {
+          UserInfo = JSON.parse(responseUserEl.innerHTML);
+          document.getElementById("username").innerText =
+            UserInfo.username.slice(0, 15);
+          document.getElementById("usertag").innerText = "#" +
+            UserInfo.discriminator;
+          document.getElementById(
+            "userpic"
+          ).src = `https://cdn.discordapp.com/avatars/${UserInfo.id}/${UserInfo.avatar}.png`;
+          responseUserEl.innerHTML = "";
+        }
         if (responseServerEl.innerHTML != "") {
           createServers(JSON.parse(responseServerEl.textContent));
           responseServerEl.innerHTML = "";
+        }
+        if (responseChannelEl.innerHTML != "") {
+          console.log(
+            responseChannelEl.innerHTML.substring(
+              1,
+              responseChannelEl.innerHTML.length - 1
+            )
+          );
+          currentChannel = responseChannelEl.innerHTML.substring(
+            1,
+            responseChannelEl.innerHTML.length - 1
+          );
+          responseChannelEl.innerHTML = "";
         }
 
         if (responseChannelsEl.innerHTML != "") {
@@ -44,18 +74,24 @@
 
         if (responseMessagesEl.innerHTML != "") {
           if (lastMessages != responseMessagesEl.innerHTML) {
-            console.log(JSON.parse(
+            try {
+              lastNotLoaded = false;
+              const data = JSON.parse(
                 responseMessagesEl.textContent
                   .replace(/[\x00-\x1F\x7F-\x9F]/g, "")
                   .replace(/[\u0000-\u001F]+/g, "")
-              ).reverse())
-            createMessages(
-              JSON.parse(
-                responseMessagesEl.textContent
-                  .replace(/[\x00-\x1F\x7F-\x9F]/g, "")
-                  .replace(/[\u0000-\u001F]+/g, "")
-              ).reverse()
-            );
+              ).reverse();
+              console.log(data);
+              createMessages(data);
+            } catch (e) {
+              console.log("THE ISSUE:");
+              console.error(e);
+              console.log(";");
+              messageContainer.innerHTML = FailedToLoad;
+              lastNotLoaded = true;
+            }
+          } else if (lastNotLoaded) {
+            messageContainer.innerHTML = FailedToLoad;
           }
           lastMessages = responseMessagesEl.innerHTML;
           responseMessagesEl.innerHTML = "";
@@ -73,7 +109,8 @@
       setInterval(() => {
         if (
           currentChannel != null &&
-          messageContainer.scrollTop + messageContainer.clientHeight >= messageContainer.scrollHeight - threshold
+          messageContainer.scrollTop + messageContainer.clientHeight >=
+            messageContainer.scrollHeight - threshold
         ) {
           loadMessages(
             currentChannel,
@@ -98,19 +135,51 @@
           d="M20 5H9c-1.1 0-2 .9-2 2v14l4-4h9c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 10h-9.8L9 16.2V7h11v8M3 7c-.6 0-1 .4-1 1s.4 1 1 1h2V7H3m-1 4c-.6 0-1 .4-1 1s.4 1 1 1h3v-2H2m-1 4c-.6 0-1 .4-1 1s.4 1 1 1h4v-2H1Z" />
       </svg>
     </div>`;
+      const FailedToLoad = `
+      <div class="load-error">
+        <img src="./assets/icons/sad-discord.svg" alt="sad-discord" />
+        <p>Permission or connection issue. See console for details (Ctrl + Shift + I).</p>
+      </div>
+      `;
     </script>
     <div class="server-list" id="serverList"></div>
     <main>
       <div class="left">
+        <div class="top-left" id="topLeft"></div>
         <div id="channelsContainer"></div>
         <div class="settings">
-          <button class="normal-button" style="width: 100%;" onclick="logOut()">
-            Log out
+          <div class="user-info">
+            <img
+              id="userpic"
+              src="./assets/icons/default-discord.svg"
+              width="40"
+              height="40"
+            />
+            <div>
+              <div id="username"></div>
+              <div id="usertag"></div>
+            </div>
+          </div>
+          <button class="normal-button" onclick="logOut()">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+            >
+              <path
+                fill="currentColor"
+                d="M14.08 15.59L16.67 13H7v-2h9.67l-2.59-2.59L15.5 7l5 5l-5 5l-1.42-1.41M19 3a2 2 0 0 1 2 2v4.67l-2-2V5H5v14h14v-2.67l2-2V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.11.89-2 2-2h14Z"
+              />
+            </svg>
           </button>
         </div>
       </div>
       <div id="center" class="center">
-        <div class="messages" id="messagesContainer"></div>
+        <div class="top-center">
+          <div id="channelName" class="center-top"></div>
+          <div class="messages" id="messagesContainer"></div>
+        </div>
         <div class="input">
           <input
             class="chat-input"
@@ -135,482 +204,62 @@
       </div>
       <script defer>
         const commandEl = document.getElementById("command");
+        const topLeftEl = document.getElementById("topLeft");
         const messageContainer = document.getElementById("messagesContainer");
         document.getElementById("serverList").innerHTML = loadingElInn;
         commandEl.innerHTML = `getServers`;
+        setTimeout(() => {
+          commandEl.innerHTML = `getMe`;
+        }, 50);
         let useRawMessage = false;
-
-        function createServers(data) {
-          const serversElement = document.getElementById("serverList");
-          console.log(data);
-          serversElement.innerHTML = DmsElement;
-          data.forEach((serverData) => {
-            // Create the server element
-            const serverElement = document.createElement("a");
-            serverElement.title = serverData.name;
-
-            serverElement.classList.add("server");
-
-            // Set the name of the server
-            const nameElement = document.createElement("p");
-            nameElement.textContent = serverData.name;
-            serverElement.appendChild(nameElement);
-
-            // Set the icon of the server
-            const iconElement = document.createElement("img");
-            iconElement.src = `https://cdn.discordapp.com/icons/${serverData.id}/${serverData.icon}.png?size=96`;
-            iconElement.alt = serverData.name[0];
-            serverElement.appendChild(iconElement);
-
-            // Add the server element to the servers element
-            serversElement.appendChild(serverElement);
-
-            serverElement.onclick = () => {
-              goToServer(serverData.id, serverElement);
-            };
-          });
-        }
-
-        function createChannels(channels) {
-          const container = document.getElementById("channelsContainer");
-          container.innerHTML = "";
-          console.log(channels);
-
-          channels.forEach((channel) => {
-            if (channel.type === 0) {
-              const channelElem = document.createElement("div");
-              channelElem.classList.add("channel");
-              channelElem.title = channel.name;
-              channelElem.onclick = () => {
-                goToChannel(channel.id, channelElem);
-              };
-
-              channelElem.setAttribute("data-channel-id", channel.id);
-
-              const iconElem = document.createElement("div");
-              iconElem.classList.add("channel-icon");
-              iconElem.textContent = "# ";
-
-              const nameElem = document.createElement("div");
-              nameElem.classList.add("channel-name");
-              nameElem.textContent = channel.name;
-
-              channelElem.appendChild(iconElem);
-              channelElem.appendChild(nameElem);
-
-              container.appendChild(channelElem);
-            } else if (channel.type === 1 || channel.type === 3) {
-              const channelElem = document.createElement("div");
-              channelElem.classList.add("channel");
-              channelElem.onclick = () => {
-                goToDm(channel.id, channelElem);
-              };
-              let channelName = channel.name
-                ? channel.name
-                : channel.recipients
-                    .map((recipient) => recipient.username)
-                    .join(", ");
-              channelElem.title = channelName;
-
-              iconElem = document.createElement("img");
-
-              if (channel.type === 3) {
-                const channelIcon = channel.icon
-                  ? `https://cdn.discordapp.com/channel-icons/${channel.id}/${channel.icon}.webp?size=32`
-                  : "./assets/icons/group-chat.svg";
-                iconElem.src = channelIcon;
-              } else {
-                iconElem.src = `https://cdn.discordapp.com/avatars/${channel.recipients[0].id}/${channel.recipients[0].avatar}.webp?size=32`;
-                iconElem.onerror = () => {
-                  iconElem.src = "./assets/icons/default-discord.svg";
-                };
-              }
-              iconElem.classList.add("channel-icon");
-              iconElem.height = 50;
-              iconElem.width = 50;
-
-              const nameElem = document.createElement("div");
-              nameElem.classList.add("channel-name");
-              nameElem.textContent = channelName;
-
-              channelElem.appendChild(iconElem);
-              channelElem.appendChild(nameElem);
-
-              container.appendChild(channelElem);
-            }
-          });
-        }
-
-        function createMessages(messages) {
-          messageContainer.innerHTML = "";
-
-          let lastMessageAuthorId = null;
-          let lastMessageAuthorUsername = null;
-          let lastMessageContainer = null;
-
-          for (const message of messages) {
-            if (message.content == "" && !message.embeds.length) {
-              continue;
-            }
-
-            // Check if this message has the same author as the last message
-            const sameAuthorAsLastMessage =
-              lastMessageAuthorId !== null &&
-              lastMessageAuthorId !== null &&
-              message.author.id === lastMessageAuthorId &&
-              message.author.username === lastMessageAuthorUsername;
-
-            if (!sameAuthorAsLastMessage) {
-              // Create a div element to hold the message
-              const messageDiv = document.createElement("div");
-              messageDiv.classList.add("message");
-
-              const messageContentDiv = document.createElement("div");
-              messageContentDiv.classList.add("message-content");
-
-              // Create an img element for the user avatar
-              const avatarImg = document.createElement("img");
-              avatarImg.src = `https://cdn.discordapp.com/avatars/${message.author.id}/${message.author.avatar}.png`;
-              avatarImg.alt = `${message.author.username}'s avatar`;
-              avatarImg.classList.add("avatar");
-
-              // Create a span element for the message date
-              const dateSpan = document.createElement("h3");
-              dateSpan.innerHTML = `${
-                message.author.username
-              }  <span>${timeDifference(
-                new Date().valueOf(),
-                new Date(message.timestamp).getTime()
-              )}</span>`;
-              dateSpan.classList.add("message-head");
-              dateSpan.setAttribute(
-                "data-message-timestamp",
-                message.timestamp
-              );
-
-              // Create a p element for the message content
-              const contentP = document.createElement("p");
-              contentP.innerHTML = parseMessageContent(message.content);
-              contentP.setAttribute("data-author-id", message.author.id);
-
-              // Add the avatar, date, and content elements to the message div
-              messageDiv.appendChild(avatarImg);
-              messageDiv.appendChild(messageContentDiv);
-              messageContentDiv.appendChild(dateSpan);
-              messageContentDiv.appendChild(contentP);
-
-              // Add the message div to the message container
-              messageContainer.appendChild(messageDiv);
-
-              lastMessageAuthorId = message.author.id;
-              lastMessageAuthorUsername = message.author.username;
-              lastMessageContainer = messageDiv;
-
-              /// EMBEDS
-
-              for (const embed of message.embeds) {
-                embedParser(embed, messageContentDiv);
-              }
-            } else {
-              const messageContentDiv =
-                lastMessageContainer.querySelector(".message-content");
-
-              // Create a p element for the message content
-              const contentP = document.createElement("p");
-              contentP.innerHTML = parseMessageContent(message.content);
-              contentP.setAttribute("data-author-id", message.author.id);
-
-              for (const embed of message.embeds) {
-                embedParser(embed, messageContentDiv);
-              }
-
-              // Add the date and content elements to the message div
-              messageContentDiv.appendChild(contentP);
-              lastMessageAuthorId = message.author.id;
-              lastMessageAuthorUsername = message.author.username;
-            }
-          }
-
-          // Scroll to the bottom of the message container
-          messageContainer.scrollTop = messageContainer.scrollHeight;
-        }
-
-        function goToServer(serverId, iconElement) {
-          document.getElementById("channelsContainer").innerHTML = loadingElInn;
-          isInDms = false;
-          if (document.querySelector(".active-server")) {
-            document
-              .querySelector(".active-server")
-              .classList.remove("active-server");
-          }
-          iconElement.classList.add("active-server");
-
-          commandEl.innerHTML = `fetchChannels ${serverId}`;
-        }
-
-        function goToDms(iconElement) {
-          isInDms = true;
-          if (document.querySelector(".active-server")) {
-            document
-              .querySelector(".active-server")
-              .classList.remove("active-server");
-          }
-
-          iconElement.classList.add("active-server");
-          document.getElementById("channelsContainer").innerHTML = loadingElInn;
-          commandEl.innerHTML = `goToDms`;
-        }
-
-        function goToChannel(channelId, channelElem) {
-          document.getElementById("messagesContainer").innerHTML = loadingElInn;
-          if (document.querySelector(".active-channel")) {
-            document
-              .querySelector(".active-channel")
-              .classList.remove("active-channel");
-          }
-          channelElem.classList.add("active-channel");
-
-          commandEl.innerHTML = `goToChannel ${channelId}`;
-          currentChannel = channelId;
-        }
-
-        function goToDm(dmId, channelElem) {
-          document.getElementById("messagesContainer").innerHTML = loadingElInn;
-          commandEl.innerHTML = `goToDm ${dmId}`;
-          currentChannel = dmId;
-        }
-
-        function loadMessages(channelId, channelElem) {
-          commandEl.innerHTML = `goToChannel ${channelId}`;
-        }
-
-        function toggleRaw(buttonEl) {
-          buttonEl.classList.toggle("raw-active");
-          useRawMessage = !useRawMessage;
-        }
-
-        function sendMessage(event, channelId, messageEl) {
-          if (currentChannel != null) {
-            if (event.keyCode == 13) {
-              let message = messageEl.value;
-              messageEl.value = "";
-              if (useRawMessage) {
-                commandEl.innerHTML =
-                  "sendRawMessage " +
-                  JSON.stringify({
-                    id: channelId,
-                    message: message,
-                  });
-              } else {
-                commandEl.innerHTML =
-                  "sendMessage " +
-                  JSON.stringify({
-                    id: channelId,
-                    message: message,
-                  });
-              }
-            }
-          }
-        }
-      
-        function logOut(){
-          commandEl.innerHTML = "logOut";
-        }
       </script>
+      <script src="assets/js/functions.js"></script>
+      <script src="assets/js/creators.js"></script>
     </main>
+    <script src="./assets/js/parsers.js"></script>
     <script>
-      function parseMessageContent(content) {
-        const htmlContent = content
-          .replace(/```(.+?)```/gs, "<pre><code>$1</code></pre>") // code blocks
-          .replace(/`(.*?)`/gs, "<code>$1</code>") // inline code
-          .replace(/~~(.+?)~~/gs, "<del>$1</del>") // strikethrough
-          .replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>") // bold
-          .replace(
-            /((?:https?|ftp):\/\/[^\s/$.?#].[^\s]*)/g,
-            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-          ) // links
-          .replace(/\*(.+?)\*/gs, "<em>$1</em>") // italic
-          .replace(/__(.+?)__/gs, "<u>$1</u>") // underline
-          .replace(/<@!?(\d+)>/g, '<span class="mention-span">@$1</span>') // mentions
-          .replace(/<#(\d+)>/g, '<span class="channel-span">#$1</span>') // channel mentions
-          .replace(
-            /<a?:\w+:(\d+)>/g,
-            '<img class="emoji" src="https://cdn.discordapp.com/emojis/$1.gif" />'
-          ); // emojis
-        return htmlContent;
-      }
-      function parseMessageEmbeds(content) {
-        const htmlContent = content
-          .replace(/```(.+?)```/gs, "<pre><code>$1</code></pre>") // code blocks
-          .replace(/`(.*?)`/gs, "<code>$1</code>") // inline code
-          .replace(/~~(.+?)~~/gs, "<del>$1</del>") // strikethrough
-          .replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>") // bold
-          .replace(
-            /\[([^\]]+)\]\(([^)]+)\)/g,
-            '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-          ) // links
-          .replace(/\*(.+?)\*/gs, "<em>$1</em>") // italic
-          .replace(/__(.+?)__/gs, "<u>$1</u>") // underline
-          .replace(/<@!?(\d+)>/g, '<span class="mention-span">@$1</span>') // mentions
-          .replace(/<#(\d+)>/g, '<span class="channel-span">#$1</span>') // channel mentions
-          .replace(
-            /<a?:\w+:(\d+)>/g,
-            '<img class="emoji" src="https://cdn.discordapp.com/emojis/$1.gif" />'
-          ); // emojis
-        return htmlContent;
-      }
+      let lastMessageMenu = null;
+      function messageMenu(event, message, type) {
+        const currentTime = new Date().getTime();
 
-      function timeDifference(current, previous) {
-        const msPerMinute = 60 * 1000;
-        const msPerHour = msPerMinute * 60;
-        const msPerDay = msPerHour * 24;
-        const msPerMonth = msPerDay * 30;
-        const msPerYear = msPerDay * 365;
+        if (lastMessageMenu === null || currentTime - lastMessageMenu >= 100) {
+          if (event.button === 2) {
+            lastMessageMenu = currentTime;
+            const contextMenu = document.createElement("div");
+            contextMenu.className = "message-context";
+            contextMenu.style.position = "fixed";
+            contextMenu.style.top = `${event.clientY}px`;
+            contextMenu.style.left = `${event.clientX}px`;
+            if (type == "content") {
+              contextMenu.innerHTML = `
+              <span>X Reply</span>
+              <span>X Remove message</span>
+              `;
+            } else if (type == "author") {
+              let option1 = document.createElement("span");
+              option1.innerText = "Go to Dm";
+              option1.addEventListener("mousedown", () => {
+                contactUser(message.getAttribute("data-author-id"));
+              });
+              contextMenu.appendChild(option1);
+            }
 
-        const elapsed = current - previous;
+            const closeMenu = () => {
+              setTimeout(() => {
+                document.removeEventListener("mousedown", closeMenu);
+                document.removeEventListener("scroll", closeMenu);
+                contextMenu.remove();
+              }, 10);
+            };
 
-        if (elapsed < msPerMinute) {
-          return Math.round(elapsed / 1000) + " seconds ago";
-        } else if (elapsed < msPerHour) {
-          return Math.round(elapsed / msPerMinute) + " minutes ago";
-        } else if (elapsed < msPerDay) {
-          return Math.round(elapsed / msPerHour) + " hours ago";
-        } else if (elapsed < msPerMonth) {
-          return Math.round(elapsed / msPerDay) + " days ago";
-        } else if (elapsed < msPerYear) {
-          return Math.round(elapsed / msPerMonth) + " months ago";
-        } else {
-          return Math.round(elapsed / msPerYear) + " years ago";
-        }
-      }
+            setTimeout(() => {
+              document.addEventListener("mousedown", closeMenu);
+              messageContainer.addEventListener("scroll", closeMenu);
+            }, 50);
 
-      function embedParser(embed, messageContentDiv) {
-        const embedContainerDiv = document.createElement("div");
-        embedContainerDiv.classList.add("embed-container");
-
-        if (embed.thumbnail) {
-          const embedThumbnailDiv = document.createElement("div");
-          embedThumbnailDiv.classList.add("embed-thumbnail");
-
-          const embedThumbnailImg = document.createElement("img");
-          embedThumbnailImg.src = embed.thumbnail.url;
-          embedThumbnailImg.width = 80;
-
-          embedThumbnailDiv.appendChild(embedThumbnailImg);
-          embedContainerDiv.appendChild(embedThumbnailDiv);
-        }
-
-        if (embed.author) {
-          // Create a div element for the embed author
-          const embedAuthorDiv = document.createElement("div");
-          embedAuthorDiv.classList.add("embed-author");
-
-          // Create an img element for the author icon
-          const authorIconImg = document.createElement("img");
-          authorIconImg.src = embed.author.icon_url;
-          authorIconImg.alt = `${embed.author.name}'s icon`;
-          authorIconImg.classList.add("author-icon");
-
-          // Create a span element for the author name
-          const authorNameSpan = document.createElement("span");
-          authorNameSpan.innerText = embed.author.name;
-          authorNameSpan.classList.add("author-name");
-
-          // Add the author icon and name to the author div
-          embedAuthorDiv.appendChild(authorIconImg);
-          embedAuthorDiv.appendChild(authorNameSpan);
-
-          // Add the author div to the embed container
-          embedContainerDiv.appendChild(embedAuthorDiv);
-        }
-
-        const embedTitleDiv = document.createElement("div");
-        embedTitleDiv.classList.add("embed-title");
-
-        if (embed.title) {
-          const embedTitle = document.createElement("h3");
-          embedTitle.textContent = embed.title;
-          embedTitleDiv.appendChild(embedTitle);
-        }
-
-        embedContainerDiv.appendChild(embedTitleDiv);
-
-        if (embed.description) {
-          const embedDescriptionDiv = document.createElement("div");
-          embedDescriptionDiv.classList.add("embed-description");
-          embedDescriptionDiv.innerHTML = parseMessageEmbeds(embed.description);
-          embedContainerDiv.appendChild(embedDescriptionDiv);
-        }
-
-        if (embed.fields && embed.fields.length > 0) {
-          for (const field of embed.fields) {
-            let fieldContainer = document.createElement("div");
-            fieldContainer.classList.add("embed-field-container");
-            field.inline
-              ? fieldContainer.classList.add("embed-field-inline")
-              : "";
-
-            let fieldName = document.createElement("h4");
-            fieldName.innerHTML = parseMessageEmbeds(field.name);
-
-            let fieldValue = document.createElement("span");
-            fieldValue.innerHTML = parseMessageEmbeds(field.value);
-
-            // Add the field name and value elements to the field container
-            fieldContainer.appendChild(fieldName);
-            fieldContainer.appendChild(fieldValue);
-
-            // Add the field container to the embed container
-            embedContainerDiv.appendChild(fieldContainer);
+            message.appendChild(contextMenu);
           }
         }
-
-        // Create a div element for the embed body
-        const embedBodyDiv = document.createElement("div");
-        embedBodyDiv.classList.add("embed-body");
-
-        if (embed.image) {
-          const imageContainer = document.createElement("div");
-          imageContainer.classList.add("embed-image-container");
-
-          const image = document.createElement("img");
-          image.src = embed.image.url;
-
-          imageContainer.appendChild(image);
-          embedContainerDiv.appendChild(imageContainer);
-        }
-
-        // Check if the embed has a footer
-        if (embed.footer && embed.footer.text) {
-          // Create a div element for the embed footer
-          const embedFooterDiv = document.createElement("div");
-          embedFooterDiv.classList.add("embed-footer");
-
-          // Create a span element for the footer text
-          const footerTextSpan = document.createElement("span");
-          footerTextSpan.innerHTML = parseMessageContent(embed.footer.text);
-          footerTextSpan.classList.add("embed-footer-text");
-
-          // Add the footer text to the embed footer
-          embedFooterDiv.appendChild(footerTextSpan);
-
-          // Add the embed footer to the embed body
-          embedBodyDiv.appendChild(embedFooterDiv);
-        }
-
-        // Add the embed body to the embed container
-        embedContainerDiv.appendChild(embedBodyDiv);
-        try {
-          // Removing this sometimes just breaks it idk why
-          embedContainerDiv.style.borderLeft = `5px solid #${
-            embed.color.toString(16).padStart(6, "0") || "fff"
-          }`;
-        } catch (e) {
-          console.error(e);
-        }
-
-        // Add the embed container to the message content div
-        messageContentDiv.appendChild(embedContainerDiv);
       }
     </script>
   </body>

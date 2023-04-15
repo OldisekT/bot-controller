@@ -46,7 +46,7 @@ window.addEventListener("DOMContentLoaded", () => {
   //                                           index.html                                              \\
   if (document.body.id === "index") {
     // AUTO LOGIN
-    let maybeToken
+    let maybeToken;
     fs.access(path.join(__dirname, "config.json"), fs.constants.F_OK, (err) => {
       if (err) {
       } else {
@@ -73,8 +73,8 @@ window.addEventListener("DOMContentLoaded", () => {
     ipcRenderer.on("validate-token-response", (event, isValid) => {
       const messageContainer = document.querySelector("#isTokenValid");
       console.log("Received validation " + isValid);
-      console.log(`MaybeToken = ${maybeToken}`)
-      console.log(`TOKEN = ${TOKEN}`)
+      console.log(`MaybeToken = ${maybeToken}`);
+      console.log(`TOKEN = ${TOKEN}`);
 
       if (isValid) {
         messageContainer.innerHTML = "true";
@@ -100,8 +100,10 @@ window.addEventListener("DOMContentLoaded", () => {
     const commandEl = document.getElementById("command");
     const responseServerEl = document.getElementById("responseServers");
     const responseChannelsEl = document.getElementById("responseChannels");
+    const responseChannelEl = document.getElementById("responseChannel");
     const responseMessagesEl = document.getElementById("responseMessages");
     const responseMessageEl = document.getElementById("responseMessage");
+    const responseUserEl = document.getElementById("responseUser");
     TOKEN = JSON.parse(
       fs.readFileSync(path.join(__dirname, "config.json"), "utf8")
     ).TOKEN;
@@ -113,37 +115,37 @@ window.addEventListener("DOMContentLoaded", () => {
         if (command == "getServers") {
           console.log("Getting servers");
           ipcRenderer.send("getServers", TOKEN);
-        }
-        else if (command.startsWith("fetchChannels")){
+        } else if (command == "getMe") {
+          console.log("Getting user info");
+          ipcRenderer.send("getMe", TOKEN);
+        } else if (command.startsWith("fetchChannels")) {
           console.log("Getting channels");
-          ipcRenderer.send("fetchChannels",command.split(" ")[1],TOKEN)
-        }
-        else if (command == "goToDms"){
+          ipcRenderer.send("fetchChannels", command.split(" ")[1], TOKEN);
+        } else if (command == "goToDms") {
           console.log("Getting Dms");
-          ipcRenderer.send("fetchDms",TOKEN)
-        }
-        else if (command.startsWith("goToChannel")){
-          console.log("Getting first messages");
-          ipcRenderer.send("goToChannel",command.split(" ")[1],TOKEN)
-        }
-        else if (command.startsWith("goToDm")){
-          console.log("Getting Dm's first messages");
-          ipcRenderer.send("goToDm",command.split(" ")[1],TOKEN)
-        }
-        else if (command.startsWith("sendMessage")) {
+          ipcRenderer.send("fetchDms", TOKEN);
+        } else if (command.startsWith("goToChannel")) {
+          console.log("Getting messages");
+          ipcRenderer.send("goToChannel", command.split(" ")[1], TOKEN);
+        } else if (command.startsWith("goToDm")) {
+          console.log("Getting Dm's messages");
+          ipcRenderer.send("goToDm", command.split(" ")[1], TOKEN);
+        } else if (command.startsWith("sendMessage")) {
           const { id, message } = JSON.parse(command.slice(12));
           console.log("Sending message " + message);
           ipcRenderer.send("sendMessage", id, message, TOKEN);
-        }
-        else if (command.startsWith("sendRawMessage")) {
+        } else if (command.startsWith("sendRawMessage")) {
           const { id, message } = JSON.parse(command.slice(15));
           console.log("Sending message " + message);
           ipcRenderer.send("sendRawMessage", id, message, TOKEN);
-        }
-        else if (command.startsWith("logOut")) {
+        } else if (command.startsWith("createDm")) {
+          const userID = command.slice(9);
+          console.log("Creating Dm with " + userID);
+          ipcRenderer.send("createDm", userID, TOKEN);
+        } else if (command.startsWith("logOut")) {
           fs.writeFileSync(
             path.join(__dirname, "config.json"),
-            JSON.stringify({"TOKEN":""})
+            JSON.stringify({ TOKEN: "" })
           );
           ipcRenderer.send("logOut");
         }
@@ -151,6 +153,9 @@ window.addEventListener("DOMContentLoaded", () => {
     }, 10);
     ipcRenderer.on("getServers", (event, data) => {
       responseServerEl.innerHTML = JSON.stringify(data);
+    });
+    ipcRenderer.on("getMe", (event, data) => {
+      responseUserEl.innerHTML = JSON.stringify(data);
     });
     ipcRenderer.on("fetchChannels", (event, data) => {
       responseChannelsEl.innerHTML = JSON.stringify(data);
@@ -160,6 +165,12 @@ window.addEventListener("DOMContentLoaded", () => {
     });
     ipcRenderer.on("sendMessage", (event, data) => {
       responseMessageEl.innerHTML = JSON.stringify(data);
+    });
+    ipcRenderer.on("createDm", (event, data) => {
+      responseMessagesEl.innerHTML = JSON.stringify(data);
+    });
+    ipcRenderer.on("ChannelID", (event, data) => {
+      responseChannelEl.innerHTML = JSON.stringify(data);
     });
   }
 });
