@@ -142,7 +142,8 @@ function createMessages(messages) {
       message.author.id === lastMessageAuthorId &&
       message.author.username === lastMessageAuthorUsername;
 
-    if (!sameAuthorAsLastMessage || lastMessageTime > 60) {
+
+    if (!sameAuthorAsLastMessage || ((new Date(message.timestamp).getTime() / 1000) - lastMessageTime) > 60) {
       // Create a div element to hold the message
       const messageDiv = document.createElement("div");
       messageDiv.classList.add("message");
