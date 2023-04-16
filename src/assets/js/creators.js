@@ -32,15 +32,28 @@ function createServers(data) {
 function createChannels(channels) {
   const container = document.getElementById("channelsContainer");
   container.innerHTML = "";
+  channels.sort((a, b) => {
+    if (!a.name || !b.name) {
+      if (!a.recipients || !b.recipients) {
+        return 0;
+      } else {
+        const aUsernames = a.recipients.map((recipient) => recipient.username);
+        const bUsernames = b.recipients.map((recipient) => recipient.username);
+        return aUsernames.join(", ").toLowerCase().localeCompare(bUsernames.join(", ").toLowerCase());
+      }
+    } else {
+      return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    }
+  });
+  
   console.log(channels);
-
   channels.forEach((channel) => {
     if (channel.type === 0) {
       const channelElem = document.createElement("div");
       channelElem.classList.add("channel");
       channelElem.title = channel.name;
       channelElem.onclick = () => {
-        goToChannel(channel.id, channel.name , channelElem);
+        goToChannel(channel.id, channel.name, channelElem);
       };
 
       channelElem.setAttribute("data-channel-id", channel.id);
@@ -69,9 +82,7 @@ function createChannels(channels) {
       };
       let channelName = channel.name
         ? channel.name
-        : channel.recipients
-            .map((recipient) => recipient.username)
-            .join(", ");
+        : channel.recipients.map((recipient) => recipient.username).join(", ");
       channelElem.title = channelName;
 
       iconElem = document.createElement("img");
@@ -104,7 +115,8 @@ function createChannels(channels) {
 }
 
 function createMessages(messages) {
-  messageContainer.innerHTML = "";
+  messageContainer.innerHTML =
+    "<span style='position:relative;left:40%;transform:translateX(-50%);color:var(--text-m)'>I cant load more then this</span>";
 
   let lastMessageAuthorId = null;
   let lastMessageAuthorUsername = null;
@@ -148,17 +160,12 @@ function createMessages(messages) {
 
       // Create a span element for the message date
       const dateSpan = document.createElement("h3");
-      dateSpan.innerHTML = `${
-        message.author.username
-      }  <span>${timeDifference(
+      dateSpan.innerHTML = `${message.author.username}  <span>${timeDifference(
         new Date().valueOf(),
         new Date(message.timestamp).getTime()
       )}</span>`;
       dateSpan.classList.add("message-head");
-      dateSpan.setAttribute(
-        "data-message-timestamp",
-        message.timestamp
-      );
+      dateSpan.setAttribute("data-message-timestamp", message.timestamp);
 
       // Create a p element for the message content
       const contentP = document.createElement("p");
@@ -184,14 +191,7 @@ function createMessages(messages) {
 
       if (message.attachments.length > 0) {
         for (const attachment of message.attachments) {
-          let image = document.createElement("img");
-          image.classList.add("message-attachment");
-          image.alt = attachment.filename;
-          image.src = attachment.url;
-          image.width = attachment.width;
-          image.height = attachment.height;
-
-          messageContainer.appendChild(image);
+          createAttachment(attachment);
         }
       }
 
@@ -224,14 +224,7 @@ function createMessages(messages) {
 
       if (message.attachments.length > 0) {
         for (const attachment of message.attachments) {
-          let image = document.createElement("img");
-          image.classList.add("message-attachment");
-          image.alt = attachment.filename;
-          image.src = attachment.url;
-          image.width = attachment.width;
-          image.height = attachment.height;
-
-          messageContainer.appendChild(image);
+          createAttachment(attachment);
         }
       }
     }
@@ -241,6 +234,90 @@ function createMessages(messages) {
   messageContainer.scrollTop = messageContainer.scrollHeight;
 }
 
+function createAttachment(attachment) {
+  const filename = attachment.filename.toLowerCase();
+  if (
+    filename.endsWith(".png") ||
+    filename.endsWith(".jpg") ||
+    filename.endsWith(".jpeg")
+  ) {
+    const image = document.createElement("img");
+    image.classList.add("message-attachment");
+    image.classList.add("image");
+    image.alt = attachment.filename;
+    image.src = attachment.url;
+    image.width = attachment.width;
+    image.height = attachment.height;
+    messageContainer.appendChild(image);
+  } else if (
+    filename.endsWith(".mp4") ||
+    filename.endsWith(".mov") ||
+    filename.endsWith(".mkv")
+  ) {
+    const videoHolder = document.createElement("div");
+    const videoTimelineHolder = document.createElement("div");
+    const videoTimeline = document.createElement("div");
+    const videoTimelineOverlay = document.createElement("div");
+    const videoPlayEl = document.createElement("div");
+    const video = document.createElement("video");
+
+    videoTimelineHolder.classList.add("video-timeline-holder");
+    videoTimeline.classList.add("video-timeline");
+    videoTimelineOverlay.classList.add("video-timeline-overlay");
+    videoHolder.classList.add("message-attachment");
+    videoPlayEl.classList.add("video-play");
+    video.classList.add("video");
+
+    let videoAspectRatio = attachment.width / attachment.height;
+    video.src = attachment.url;
+    if (attachment.width > 500) {
+      video.width = 450;
+      video.height = 450 / videoAspectRatio;
+    } else {
+      video.width = attachment.width;
+      video.height = attachment.height;
+    }
+
+    messageContainer.appendChild(videoHolder);
+    videoHolder.appendChild(videoPlayEl);
+    videoHolder.appendChild(video);
+    videoHolder.appendChild(videoTimelineHolder);
+    videoTimelineHolder.appendChild(videoTimeline);
+    videoTimelineHolder.appendChild(videoTimelineOverlay);
+
+    videoPlayEl.addEventListener("click", () => {
+      if (video.paused) {
+        video.play();
+        videoPlayEl.style.opacity = 0;
+      } else {
+        video.pause();
+        videoPlayEl.style.opacity = 1;
+      }
+    });
+    video.addEventListener("timeupdate", () => {
+      const duration = video.duration;
+      const currentTime = video.currentTime;
+      const percentage = (currentTime / duration) * 100;
+      videoTimeline.style.width = percentage + "%";
+    });
+    videoTimelineOverlay.addEventListener("mousedown", (event) => {
+      const totalWidth = videoTimelineOverlay.offsetWidth;
+      const position =
+        event.clientX - document.getElementById("center").offsetLeft - 34;
+      const percentage = position / totalWidth;
+      const newTime = percentage * video.duration;
+      video.currentTime = newTime;
+    });
+  } else {
+    let link = document.createElement("a");
+    link.classList.add("message-attachment");
+    link.classList.add("file-attachment");
+    link.href = attachment.url;
+    link.target = "_blank";
+    link.textContent = attachment.filename;
+    messageContainer.appendChild(link);
+  }
+}
 
 function canUserSeeChannel(channel, user) {
   // Check if the user has the MANAGE_CHANNELS permission, which always grants access to a channel

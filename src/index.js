@@ -28,6 +28,13 @@ const createWindow = () => {
   mainWindow.loadFile(path.join(__dirname, "index.html"));
   //mainWindow.webContents.openDevTools();
   //mainWindow.maximize()
+
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F5') {
+      mainWindow.reload()
+      event.preventDefault()
+    }
+  })
 };
 
 app.on("ready", createWindow);

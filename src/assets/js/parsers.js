@@ -154,6 +154,64 @@ function embedParser(embed, messageContentDiv) {
     embedContainerDiv.appendChild(imageContainer);
   }
 
+  if (embed.video) {
+    const videoHolder = document.createElement('div');
+    const videoTimelineHolder = document.createElement('div');
+    const videoTimeline = document.createElement('div');
+    const videoTimelineOverlay = document.createElement('div');
+    const videoPlayEl = document.createElement('div');
+    const video = document.createElement('video');
+
+    videoTimelineHolder.classList.add("video-timeline-holder");
+    videoTimeline.classList.add("video-timeline");
+    videoTimelineOverlay.classList.add("video-timeline-overlay");
+    videoHolder.classList.add('embed-video');
+    videoPlayEl.classList.add('video-play');
+    video.classList.add('video');
+
+    let videoAspectRatio = embed.video.width / embed.video.height;
+    video.src = embed.video.url;
+    if (embed.video.width > 500){
+      video.width = 450;
+      video.height = 450 / videoAspectRatio;
+    }
+    else {
+      video.width = embed.video.width;
+      video.height = embed.video.height;
+    }
+
+
+    embedContainerDiv.appendChild(videoHolder);
+    videoHolder.appendChild(videoPlayEl);
+    videoHolder.appendChild(video);
+    videoHolder.appendChild(videoTimelineHolder);
+    videoTimelineHolder.appendChild(videoTimeline);
+    videoTimelineHolder.appendChild(videoTimelineOverlay);
+
+    videoPlayEl.addEventListener('click', () => {
+      if (video.paused) {
+        video.play();
+        videoPlayEl.style.opacity = 0;
+      } else {
+        video.pause();
+        videoPlayEl.style.opacity = 1;
+      }
+    });
+    video.addEventListener('timeupdate', () => {
+      const duration = video.duration;
+      const currentTime = video.currentTime;
+      const percentage = (currentTime / duration) * 100;
+      videoTimeline.style.width = percentage + '%';
+    });
+    videoTimelineOverlay.addEventListener('mousedown', (event) => {
+      const totalWidth = videoTimelineOverlay.offsetWidth;
+      const position = event.clientX - document.getElementById("center").offsetLeft - 70;
+      const percentage = (position / totalWidth);
+      const newTime = percentage * video.duration;
+      video.currentTime = newTime;
+    });
+  }
+
   // Check if the embed has a footer
   if (embed.footer && embed.footer.text) {
     // Create a div element for the embed footer
