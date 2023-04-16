@@ -38,15 +38,25 @@
           UserInfo = JSON.parse(responseUserEl.innerHTML);
           document.getElementById("username").innerText =
             UserInfo.username.slice(0, 15);
-          document.getElementById("usertag").innerText = "#" +
-            UserInfo.discriminator;
+          document.getElementById("usertag").innerText =
+            "#" + UserInfo.discriminator;
           document.getElementById(
             "userpic"
           ).src = `https://cdn.discordapp.com/avatars/${UserInfo.id}/${UserInfo.avatar}.png`;
           responseUserEl.innerHTML = "";
         }
         if (responseServerEl.innerHTML != "") {
+          try {
           createServers(JSON.parse(responseServerEl.textContent));
+          } 
+          catch (e) {
+              console.log("THE ISSUE:");
+              console.error(e);
+              console.log("FROM: " + responseServerEl.textContent)
+              console.log(";");
+              document.getElementById("serverList").innerHTML = FailedToLoad;
+              lastNotLoaded = true;
+            }
           responseServerEl.innerHTML = "";
         }
         if (responseChannelEl.innerHTML != "") {
@@ -88,6 +98,7 @@
             } catch (e) {
               console.log("THE ISSUE:");
               console.error(e);
+              console.log("FROM: " + responseMessagesEl.textContent)
               console.log(";");
               messageContainer.innerHTML = FailedToLoad;
               lastNotLoaded = true;
@@ -221,9 +232,9 @@
     <script src="./assets/js/parsers.js"></script>
     <script>
       let lastMessageMenu = null;
-      function messageMenu(event, message, type) {
+      function messageMenu(event, message, type, element = null) {
         const currentTime = new Date().getTime();
-
+        
         if (lastMessageMenu === null || currentTime - lastMessageMenu >= 100) {
           if (event.button === 2) {
             lastMessageMenu = currentTime;
@@ -234,12 +245,39 @@
             contextMenu.style.left = `${event.clientX}px`;
             if (type == "content") {
               contextMenu.innerHTML = `
-              <span>X Reply</span>
-              <span>X Remove message</span>
+              <span>X Reply <img src="./assets/icons/reply.svg"></span>
               `;
+              let removeMessage = document.createElement("span");
+              removeMessage.innerHTML = "Remove message <img src='./assets/icons/trash-can.svg'>";
+              removeMessage.addEventListener("mousedown", () => {
+                deleteMessage(element.getAttribute("data-channel-id"),element.getAttribute("data-id"));
+              });
+              contextMenu.appendChild(removeMessage);
+            } else if (type == "attachment" && element != null) {
+              if (element.tagName == "IMG") {
+                let CopyImage = document.createElement("span");
+                CopyImage.innerHTML = "Copy image <img src='./assets/icons/image.svg'>";
+                CopyImage.addEventListener("mousedown", () => {
+                  copyImage(element.src);
+                });
+                contextMenu.appendChild(CopyImage);
+              }
+
+              let showRawDataEl = document.createElement("span");
+              showRawDataEl.innerHTML = "Show data <img src='./assets/icons/raw.svg'>";
+              showRawDataEl.addEventListener("mousedown", () => {
+                showRawData(element.getAttribute("data-raw"));
+              });
+              contextMenu.appendChild(showRawDataEl);
+              let CopyURL = document.createElement("span");
+              CopyURL.innerHTML = "Copy URL <img src='./assets/icons/content-copy.svg'>";
+              CopyURL.addEventListener("mousedown", () => {
+                copyUrlToClipboard(element.src || element.href);
+              });
+              contextMenu.appendChild(CopyURL);
             } else if (type == "author") {
               let option1 = document.createElement("span");
-              option1.innerText = "Go to Dm";
+              option1.innerHTML = "Go to Dm <img src='./assets/icons/message-arrow-left.svg'>";
               option1.addEventListener("mousedown", () => {
                 contactUser(message.getAttribute("data-author-id"));
               });

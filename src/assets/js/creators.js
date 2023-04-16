@@ -185,9 +185,10 @@ function createMessages(messages) {
 
       // Add the message div to the message container
       messageContainer.appendChild(messageDiv);
-
+      contentP.setAttribute("data-id", message.id);
+      contentP.setAttribute("data-channel-id", message.channel_id);
       contentP.addEventListener("mousedown", function (event) {
-        messageMenu(event, contentP, "content");
+        messageMenu(event, contentP, "content", contentP);
       });
 
       lastMessageAuthorId = message.author.id;
@@ -224,7 +225,8 @@ function createMessages(messages) {
       messageContentDiv.appendChild(contentP);
       lastMessageAuthorId = message.author.id;
       lastMessageAuthorUsername = message.author.username;
-
+      contentP.setAttribute("data-id", message.id);
+      contentP.setAttribute("data-channel-id", message.channel_id);
       contentP.addEventListener("mousedown", function (event) {
         messageMenu(event, contentP, "content");
       });
@@ -259,6 +261,10 @@ function createAttachment(attachment) {
     messageContainer.appendChild(image);
     image.addEventListener("click",()=>{
       fullImage(image);
+    })
+    image.setAttribute("data-raw",JSON.stringify(attachment));
+    image.addEventListener("mousedown", function (event) {
+      messageMenu(event, image.parentNode, "attachment",image);
     })
   } else if (
     filename.endsWith(".mp4") ||
@@ -299,6 +305,9 @@ function createAttachment(attachment) {
     videoTimelineHolder.appendChild(videoTimeline);
     videoTimelineHolder.appendChild(videoTimelineOverlay);
 
+    videoPlayEl.addEventListener("mousedown", (event) => {
+      messageMenu(event, video.parentNode.parentNode, "attachment",video);
+    });
     videoPlayEl.addEventListener("click", () => {
       if (video.paused) {
         video.play();
@@ -307,7 +316,10 @@ function createAttachment(attachment) {
         video.pause();
         videoPlayEl.style.opacity = 1;
       }
-    });
+    })
+    video.addEventListener("pause", () => {
+      videoPlayEl.style.opacity = 1;
+    })
     videoMaximize.addEventListener("click",() => {
       fullVideo(video);
     })
@@ -325,6 +337,7 @@ function createAttachment(attachment) {
       const newTime = percentage * video.duration;
       video.currentTime = newTime;
     });
+    video.setAttribute("data-raw",JSON.stringify(attachment));
   } else {
     let link = document.createElement("a");
     link.classList.add("message-attachment");
@@ -333,6 +346,10 @@ function createAttachment(attachment) {
     link.target = "_blank";
     link.textContent = attachment.filename;
     messageContainer.appendChild(link);
+    link.setAttribute("data-raw",JSON.stringify(attachment));
+    link.addEventListener("mousedown", function (event) {
+      messageMenu(event, link.parentNode, "attachment",link);
+    })
   }
 }
 

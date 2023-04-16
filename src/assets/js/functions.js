@@ -59,6 +59,11 @@ function toggleRaw(buttonEl) {
   useRawMessage = !useRawMessage;
 }
 
+function deleteMessage(channelId, messageId){
+  commandEl.innerHTML = `deleteMessage ${channelId} ${messageId}`;
+  console.log(commandEl.innerHTML);
+}
+
 function sendMessage(event, channelId, messageEl) {
   if (currentChannel != null) {
     if (event.keyCode == 13) {
@@ -99,7 +104,7 @@ function fullImage(image) {
   fullImageHolder.appendChild(fullImageEl);
   document.body.appendChild(fullImageHolder);
   setTimeout(() => {
-    document.addEventListener("click", (e) => {
+    fullImageHolder.addEventListener("click", (e) => {
       if (e.target != fullImageEl) {
         fullImageHolder.remove();
       }
@@ -121,6 +126,8 @@ function fullVideo(video) {
   videoTimelineOverlay.classList.add("video-timeline-overlay");
   videoPlayEl.classList.add("video-play");
 
+  video.pause();
+
   videoPlayEl.addEventListener("click", () => {
     if (videoEl.paused) {
       videoEl.play();
@@ -130,11 +137,16 @@ function fullVideo(video) {
       videoPlayEl.style.opacity = 1;
     }
   });
+  video.addEventListener("pause", () => {
+    videoPlayEl.style.opacity = 1;
+  })
+
   videoEl.addEventListener("timeupdate", () => {
     const duration = videoEl.duration;
     const currentTime = videoEl.currentTime;
     const percentage = (currentTime / duration) * 100;
     videoTimeline.style.width = percentage + "%";
+    video.currentTime = videoEl.currentTime;
   });
   videoTimelineOverlay.addEventListener("mousedown", (event) => {
     const totalWidth = videoTimelineOverlay.offsetWidth;
@@ -148,6 +160,7 @@ function fullVideo(video) {
   videoHolder.classList.add("full-video-holder");
   videoEl.classList.add("full-video");
   videoEl.src = video.src;
+  videoEl.currentTime = video.currentTime;
 
   videoHolder2.style.position = "relative";
 
@@ -160,7 +173,7 @@ function fullVideo(video) {
   videoTimelineHolder.appendChild(videoTimelineOverlay);
 
   setTimeout(() => {
-    document.addEventListener("click", (e) => {
+    videoHolder.addEventListener("click", (e) => {
       if (
         e.target != videoEl &&
         e.target != videoPlayEl &&
@@ -170,4 +183,58 @@ function fullVideo(video) {
       }
     });
   }, 20);
+}
+
+function showRawData(data) {
+  const dataHolder = document.createElement("div");
+  dataHolder.classList.add("data-raw-holder");
+
+  const codeBlock = document.createElement("code");
+  const preBlock = document.createElement("pre");
+
+  codeBlock.appendChild(preBlock);
+  dataHolder.appendChild(codeBlock);
+  document.body.appendChild(dataHolder);
+
+  const formattedData = JSON.stringify(JSON.parse(data), null, 2);
+  preBlock.textContent = formattedData;
+
+  setTimeout(() => {
+    document.addEventListener("click", (e) => {
+      if (e.target != codeBlock && e.target != preBlock) {
+        dataHolder.remove();
+      }
+    });
+  }, 20);
+}
+
+function copyUrlToClipboard(url) {
+  const inputEl = document.createElement("input");
+  inputEl.setAttribute("type", "text");
+  inputEl.setAttribute("value", url);
+  document.body.appendChild(inputEl);
+  inputEl.select();
+  document.execCommand("copy");
+  document.body.removeChild(inputEl);
+}
+
+function copyImage(imageUrl) {
+  const img = new Image();
+  img.crossOrigin = "Anonymous";
+  img.onload = function() {
+    const canvas = document.createElement("canvas");
+    canvas.width = this.width;
+    canvas.height = this.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(this, 0, 0);
+    canvas.toBlob(blob => {
+      const clipboardItem = new ClipboardItem({'image/png': blob});
+      navigator.clipboard.write([clipboardItem]).then(() => {
+        console.log("Image copied to clipboard");
+      }, (err) => {
+        console.error("Failed to copy image to clipboard", err);
+      });
+    }, 'image/png', 1);
+  };
+  img.src = imageUrl;
 }

@@ -130,6 +130,11 @@ window.addEventListener("DOMContentLoaded", () => {
         } else if (command.startsWith("goToDm")) {
           console.log("Getting Dm's messages");
           ipcRenderer.send("goToDm", command.split(" ")[1], TOKEN);
+        } else if (command.startsWith("deleteMessage")) {
+          let channelId = command.split(" ")[1];
+          let messageId = command.split(" ")[2];
+          console.log(`Removing message ${channelId} > ${messageId}`);
+          ipcRenderer.send("deleteMessage", channelId, messageId, TOKEN);
         } else if (command.startsWith("sendMessage")) {
           const { id, message } = JSON.parse(command.slice(12));
           console.log("Sending message " + message);
@@ -162,6 +167,9 @@ window.addEventListener("DOMContentLoaded", () => {
     });
     ipcRenderer.on("goToChannel", (event, data) => {
       responseMessagesEl.innerHTML = JSON.stringify(data);
+    });
+    ipcRenderer.on("removedMessage", (event,channelId, data) => {
+      ipcRenderer.send("goToChannel", channelId, TOKEN);
     });
     ipcRenderer.on("sendMessage", (event, data) => {
       responseMessageEl.innerHTML = JSON.stringify(data);

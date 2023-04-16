@@ -232,6 +232,36 @@ ipcMain.on("goToDm", (event, dmId, token) => {
     });
 });
 
+ipcMain.on("deleteMessage", async (event, channelId, messageId, token) => {
+  let tokenOption = token.slice(-1);
+  token = token.slice(0, -1);
+  let authorization = "";
+  if (tokenOption == 0) {
+    authorization = `Bot ${token}`;
+  } else if (tokenOption == 1) {
+    authorization = `${token}`;
+  }
+
+  console.log(channelId + "       " + messageId)
+  
+  try {
+    const response = await fetch(
+      `https://discord.com/api/v9/channels/${channelId}/messages/${messageId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: authorization,
+          "Content-Type": "application/json",
+        }
+      }
+    ).then((response)=>{
+      event.reply("removedMessage", channelId);
+    });
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 ipcMain.on("sendMessage", async (event, channelId, message, token) => {
   let tokenOption = token.slice(-1);
   token = token.slice(0, -1);

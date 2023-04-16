@@ -462,10 +462,12 @@ main {
 }
 
 .message-context span {
+  min-width: 200px;
+
   transition: all 200ms;
   
   box-sizing: border-box;
-  padding: 3px;
+  padding: 6px;
   border-radius: 4px;
 
   user-select: none;
@@ -473,7 +475,13 @@ main {
 }
 
 .message-context span:hover {
-  background-color: var(--btn);
+  background-color: var(--hl-m);
+}
+
+.message-context span img {
+  float: right;
+  width: 24px;
+  height: 24px;
 }
 
 .message-attachment {
@@ -588,6 +596,7 @@ opacity: 1;
   margin-left: 32px;
 }
 
+.data-raw-holder,
 .full-video-holder,
 .full-image-holder {
   display: flex;
@@ -600,6 +609,13 @@ opacity: 1;
   height: 100%;
   background-color: #00000090;
   z-index: 900;
+}
+
+
+.data-raw-holder{
+  overflow: scroll;
+  justify-content: start;
+  align-items: start;
 }
 
 .full-video,
