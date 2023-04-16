@@ -74,6 +74,9 @@ function embedParser(embed, messageContentDiv) {
     embedThumbnailImg.src = embed.thumbnail.url;
     embedThumbnailImg.width = 80;
     embedContainerDiv.appendChild(embedThumbnailImg);
+    embedThumbnailImg.onclick = () => {
+      fullImage(embedThumbnailImg);
+    };
   }
 
   if (embed.author) {
@@ -122,9 +125,7 @@ function embedParser(embed, messageContentDiv) {
     for (const field of embed.fields) {
       let fieldContainer = document.createElement("div");
       fieldContainer.classList.add("embed-field-container");
-      field.inline
-        ? fieldContainer.classList.add("embed-field-inline")
-        : "";
+      field.inline ? fieldContainer.classList.add("embed-field-inline") : "";
 
       let fieldName = document.createElement("h4");
       fieldName.innerHTML = parseMessageEmbeds(field.name);
@@ -155,61 +156,74 @@ function embedParser(embed, messageContentDiv) {
   }
 
   if (embed.video) {
-    const videoHolder = document.createElement('div');
-    const videoTimelineHolder = document.createElement('div');
-    const videoTimeline = document.createElement('div');
-    const videoTimelineOverlay = document.createElement('div');
-    const videoPlayEl = document.createElement('div');
-    const video = document.createElement('video');
+    if (embed.video.url.startsWith("https://www.youtube.com/embed/")) {
+      const youtubeEmbed = document.createElement("iframe");
+      youtubeEmbed.src = embed.video.url;
+      youtubeEmbed.setAttribute("frameborder", 0);
+      youtubeEmbed.classList.add("video");
+      embedContainerDiv.appendChild(youtubeEmbed);
+    } else {
+      const videoHolder = document.createElement("div");
+      const videoTimelineHolder = document.createElement("div");
+      const videoTimeline = document.createElement("div");
+      const videoTimelineOverlay = document.createElement("div");
+      const videoMaximize = document.createElement("div");
+      const videoPlayEl = document.createElement("div");
+      const video = document.createElement("video");
 
-    videoTimelineHolder.classList.add("video-timeline-holder");
-    videoTimeline.classList.add("video-timeline");
-    videoTimelineOverlay.classList.add("video-timeline-overlay");
-    videoHolder.classList.add('embed-video');
-    videoPlayEl.classList.add('video-play');
-    video.classList.add('video');
+      videoTimelineHolder.classList.add("video-timeline-holder");
+      videoTimeline.classList.add("video-timeline");
+      videoTimelineOverlay.classList.add("video-timeline-overlay");
+      videoHolder.classList.add("embed-video");
+      videoMaximize.classList.add("video-maximize");
+      videoPlayEl.classList.add("video-play");
+      video.classList.add("video");
 
-    let videoAspectRatio = embed.video.width / embed.video.height;
-    video.src = embed.video.url;
-    if (embed.video.width > 500){
-      video.width = 450;
-      video.height = 450 / videoAspectRatio;
-    }
-    else {
-      video.width = embed.video.width;
-      video.height = embed.video.height;
-    }
-
-
-    embedContainerDiv.appendChild(videoHolder);
-    videoHolder.appendChild(videoPlayEl);
-    videoHolder.appendChild(video);
-    videoHolder.appendChild(videoTimelineHolder);
-    videoTimelineHolder.appendChild(videoTimeline);
-    videoTimelineHolder.appendChild(videoTimelineOverlay);
-
-    videoPlayEl.addEventListener('click', () => {
-      if (video.paused) {
-        video.play();
-        videoPlayEl.style.opacity = 0;
+      let videoAspectRatio = embed.video.width / embed.video.height;
+      video.src = embed.video.url;
+      if (embed.video.width > 500) {
+        video.width = 450;
+        video.height = 450 / videoAspectRatio;
       } else {
-        video.pause();
-        videoPlayEl.style.opacity = 1;
+        video.width = embed.video.width;
+        video.height = embed.video.height;
       }
-    });
-    video.addEventListener('timeupdate', () => {
-      const duration = video.duration;
-      const currentTime = video.currentTime;
-      const percentage = (currentTime / duration) * 100;
-      videoTimeline.style.width = percentage + '%';
-    });
-    videoTimelineOverlay.addEventListener('mousedown', (event) => {
-      const totalWidth = videoTimelineOverlay.offsetWidth;
-      const position = event.clientX - document.getElementById("center").offsetLeft - 70;
-      const percentage = (position / totalWidth);
-      const newTime = percentage * video.duration;
-      video.currentTime = newTime;
-    });
+
+      embedContainerDiv.appendChild(videoHolder);
+      videoHolder.appendChild(videoPlayEl);
+      videoHolder.appendChild(videoMaximize);
+      videoHolder.appendChild(video);
+      videoHolder.appendChild(videoTimelineHolder);
+      videoTimelineHolder.appendChild(videoTimeline);
+      videoTimelineHolder.appendChild(videoTimelineOverlay);
+
+      videoPlayEl.addEventListener("click", () => {
+        if (video.paused) {
+          video.play();
+          videoPlayEl.style.opacity = 0;
+        } else {
+          video.pause();
+          videoPlayEl.style.opacity = 1;
+        }
+      });
+      videoMaximize.addEventListener("click", () => {
+        fullVideo(video);
+      });
+      video.addEventListener("timeupdate", () => {
+        const duration = video.duration;
+        const currentTime = video.currentTime;
+        const percentage = (currentTime / duration) * 100;
+        videoTimeline.style.width = percentage + "%";
+      });
+      videoTimelineOverlay.addEventListener("mousedown", (event) => {
+        const totalWidth = videoTimelineOverlay.offsetWidth;
+        const position =
+          event.clientX - document.getElementById("center").offsetLeft - 70;
+        const percentage = position / totalWidth;
+        const newTime = percentage * video.duration;
+        video.currentTime = newTime;
+      });
+    }
   }
 
   // Check if the embed has a footer

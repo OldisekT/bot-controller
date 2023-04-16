@@ -121,6 +121,8 @@ function createMessages(messages) {
   let lastMessageAuthorId = null;
   let lastMessageAuthorUsername = null;
   let lastMessageContainer = null;
+  let lastMessageTime = null;
+  let lastContentContainer = null;
 
   for (const message of messages) {
     if (
@@ -132,13 +134,15 @@ function createMessages(messages) {
     }
 
     // Check if this message has the same author as the last message
+    lastMessageTime = !lastMessageTime? 60:lastMessageTime;
+
     const sameAuthorAsLastMessage =
       lastMessageAuthorId !== null &&
       lastMessageAuthorId !== null &&
       message.author.id === lastMessageAuthorId &&
       message.author.username === lastMessageAuthorUsername;
 
-    if (!sameAuthorAsLastMessage) {
+    if (!sameAuthorAsLastMessage || lastMessageTime > 60) {
       // Create a div element to hold the message
       const messageDiv = document.createElement("div");
       messageDiv.classList.add("message");
@@ -186,8 +190,10 @@ function createMessages(messages) {
       });
 
       lastMessageAuthorId = message.author.id;
+      lastContentContainer = messageContentDiv;
       lastMessageAuthorUsername = message.author.username;
       lastMessageContainer = messageDiv;
+      lastMessageTime = new Date(message.timestamp).getTime() / 1000;
 
       if (message.attachments.length > 0) {
         for (const attachment of message.attachments) {
@@ -239,6 +245,7 @@ function createAttachment(attachment) {
   if (
     filename.endsWith(".png") ||
     filename.endsWith(".jpg") ||
+    filename.endsWith(".webm") ||
     filename.endsWith(".jpeg")
   ) {
     const image = document.createElement("img");
@@ -249,6 +256,9 @@ function createAttachment(attachment) {
     image.width = attachment.width;
     image.height = attachment.height;
     messageContainer.appendChild(image);
+    image.addEventListener("click",()=>{
+      fullImage(image);
+    })
   } else if (
     filename.endsWith(".mp4") ||
     filename.endsWith(".mov") ||
@@ -259,6 +269,7 @@ function createAttachment(attachment) {
     const videoTimeline = document.createElement("div");
     const videoTimelineOverlay = document.createElement("div");
     const videoPlayEl = document.createElement("div");
+    const videoMaximize = document.createElement("div");
     const video = document.createElement("video");
 
     videoTimelineHolder.classList.add("video-timeline-holder");
@@ -266,6 +277,7 @@ function createAttachment(attachment) {
     videoTimelineOverlay.classList.add("video-timeline-overlay");
     videoHolder.classList.add("message-attachment");
     videoPlayEl.classList.add("video-play");
+    videoMaximize.classList.add("video-maximize");
     video.classList.add("video");
 
     let videoAspectRatio = attachment.width / attachment.height;
@@ -280,6 +292,7 @@ function createAttachment(attachment) {
 
     messageContainer.appendChild(videoHolder);
     videoHolder.appendChild(videoPlayEl);
+    videoHolder.appendChild(videoMaximize);
     videoHolder.appendChild(video);
     videoHolder.appendChild(videoTimelineHolder);
     videoTimelineHolder.appendChild(videoTimeline);
@@ -294,6 +307,9 @@ function createAttachment(attachment) {
         videoPlayEl.style.opacity = 1;
       }
     });
+    videoMaximize.addEventListener("click",() => {
+      fullVideo(video);
+    })
     video.addEventListener("timeupdate", () => {
       const duration = video.duration;
       const currentTime = video.currentTime;
